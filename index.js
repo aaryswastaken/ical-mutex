@@ -2,7 +2,7 @@ const http  = require("http");
 const axios = require("axios");
 
 const port = 3000;
-const open = false;
+const open = true;
 
 
 const server = http.createServer();
@@ -13,6 +13,8 @@ server.on("request", async (req, res) => {
 	    let url = req.url.replaceAll(/.*\?/g, "");
 		
 		function handleSuccess(r) {
+			res.setHeader("Content-disposition", "inline; filename=ADECal.ics");
+			res.setHeader("Content-Type", "text/calendar;charset=UTF-8");
 			res.writeHead(200);
 			res.end(r.output);
 			resolve();
@@ -66,6 +68,12 @@ function handleReq(url) {
     })
 }
 
+const propertiesName = ['CALSCALE', 'METHOD', 'PRODID', 'VERSION', 'ATTACH', 'CATEGORIES', 'CLASS', 'COMMENT', 'DESCRIPTION', 'GEO', 'LOCATION', 'PERCENT-COMPLETE', 'PRIORITY', 'RESOURCES', 'STATUS', 'SUMMARY', 'COMPLETED', 'DTEND', 'DUE', 'DTSTART', 'DURATION', 'FREEBUSY', 'TRANSP', 'TZID', 'TZNAME', 'TZOFFSETFROM', 'TZOFFSETTO', 'TZURL', 'ATTENDEE', 'CONTACT', 'ORGANIZER', 'RECURRENCE-ID', 'RELATED-TO', 'URL', 'UID', 'EXDATE', 'RDATE', 'RRULE', 'ACTION', 'REPEAT', 'TRIGGER', 'CREATED', 'DTSTAMP', 'LAST-MODIFIED', 'SEQUENCE', 'AnIANA-registeredpropertyname', 'REQUEST-STATUS'];
+
+function isProperty(header) {
+	return propertiesName.includes(header) || header.startsWith("X-")
+}
+
 
 function parseMagic(res) {
 	let output = "";
@@ -74,16 +82,79 @@ function parseMagic(res) {
 	let splt = res.split("BEGIN:VEVENT");
 
 	output += splt[0]; // padding
-	splt = splt.map(e => e.replaceAll("END:VEVENT", "")).slice(1);
-	splt = splt.map(e => e.split("\n").map(line => line.split(":")));
 
-	splt = splt.map(e => e.map(l => [l[0], l.slice(1).join("")]));
+	// parse 
+	splt = splt.map(e => e.replaceAll("END:VEVENT", "")).slice(1); // cleanup
+	splt = splt.map(e => e.split("\n").map(line => line.split(":"))); // split by fields and split key/val in fields
+
+	splt = splt.map(e => e.map(l => [l[0], l.slice(1).join("")])); // join back values containings : that have been splitted
+
+	// SLOW AS FUCK BUT WORKS LOL
+	splt = splt.map(e => {
+		let i = 0;
+
+		let n_e = [];
+		let skip = 0;
+
+		while (i < e.length) {
+			if (skip > 0) {
+				skip--;
+			} else {
+				n_e.push(e[i]);
+
+				let j = i + 1;
+				while (j < e.length) {
+					if (!isProperty(e[j][0])) {
+						skip += 1;
+						n_e[n_e.length - 1][1] += e[j][0] + e[j][1]
+					} else {
+						j = e.length + 1; // break from closest while
+					}
+
+					j++;
+				}
+			}
+
+			i++;
+		}
+
+		return n_e
+	}); // join back values that have been splitted by the \n split
 	
 	splt = splt.map(e => Object.fromEntries(e.filter(j => j[0] != '' && j[0] != ' n')));
 
 	console.log(splt);
+	
+	splt = modifyEvents(splt);
 
-    return { output: "Error: not implemented yet", error: true, code: 501 };
+	// convert back
+	splt.forEach(event => {
+		output += "BEGIN:VEVENT\n";
+		output += Object.entries(event).map(([key, value]) => key+":"+value).join("\n");
+		output += "\nEND:VEVENT\n";
+	});
+
+	output += "END:VCALENDAR";
+
+    // return { output: "Error: not implemented yet", error: true, code: 501 };
+	
+	return { output: output, error: false }
+}
+
+function modifyEvents(events) {
+	return events.map(event => {
+		let id = event.SUMMARY.split("#")[1] ?? 0 
+		event.SUMMARY = formatCourseName(event.SUMMARY.split("-")[2]) + " - " + event.DESCRIPTION.split("\\n")[5];
+		event.LOCATION = event.LOCATION.split(" - ")[1] ?? "";
+
+		event.DESCRIPTION = event.DESCRIPTION.split("\\n").map((j, i) => (i==1) ? (j + " #" + id.toString()) : j).join("\\n")
+
+		return event;
+	});
+}
+
+function formatCourseName(name) {
+	return name
 }
 
 const ip = open ? "0.0.0.0" : "localhost"
