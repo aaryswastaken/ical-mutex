@@ -143,8 +143,9 @@ function parseMagic(res) {
 
 function modifyEvents(events) {
 	return events.map(event => {
-		let id = event.SUMMARY.split("#")[1] ?? 0 
-		event.SUMMARY = formatCourseName(event.SUMMARY.split("-")[2]) + " - " + event.DESCRIPTION.split("\\n")[5];
+		let id = event.SUMMARY.split("#")[1] ?? 0
+		let profName = event.DESCRIPTION.split("\\n")[5];
+		event.SUMMARY = formatCourseName(event.SUMMARY.split("-")[2]) + (profName !== "" ? (" - " + profName) : "");
 		event.LOCATION = event.LOCATION.split(" - ")[1] ?? "";
 
 		event.DESCRIPTION = event.DESCRIPTION.split("\\n").map((j, i) => (i==1) ? (j + " #" + id.toString()) : j).join("\\n")
@@ -153,8 +154,10 @@ function modifyEvents(events) {
 	});
 }
 
+const courseDict = {"LV": "Langue Vivante", "PH": "Physique", "MA": "Mathematiques", "TH": "Thermodynamique", "CF": "Conference", "SOU": "Soutien", "CH": "Chimie", "CO": "Conception", "CE": "Connaissance de l'entreprise"}
+
 function formatCourseName(name) {
-	return name
+	return courseDict[name] ?? name;
 }
 
 const ip = open ? "0.0.0.0" : "localhost"
