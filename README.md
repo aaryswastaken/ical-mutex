@@ -1,10 +1,9 @@
 # ✨ ***ical-mutex*** ✨
 
+
 iCal-mutex is just an app to proxy ADE's ics calendar to do some tweaking, making it more readable
 
 Will only work with `ade-outils.insa-lyon.fr`.
-
-## ***This app is not deployed yet***, I will notify when it'll be online
 
 I wrote it as a first year student so the course indicator directory is incomplete, report any new entries to the dictionnary in the Github's issues or to `aarys.sahler@insa-lyon.fr`.
 
