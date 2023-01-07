@@ -43,7 +43,7 @@ function handleReq(url) {
     return new Promise((resolve, reject) => {
 	url = decodeURI(url);
 	console.log("Going for url: "+url);
-        if (url.match(/https:\/\/ade-outils\.insa-lyon\.fr\/ADE-Cal:/gm)) {
+        if (url.match(/https:\/\/ade-outils\.insa-lyon\.fr\/ADE-Cal/gm)) {
             axios.get(url)
 				.then(response => {
 					console.log("Response code from ADE: "+response.status); // console.log("Status code: "+res.statusCode.toString());
