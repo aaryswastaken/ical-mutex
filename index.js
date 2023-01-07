@@ -21,7 +21,7 @@ server.on("request", async (req, res) => {
 		}
 	
 		function handleError(r) {
-			res.writeHead(r.code);
+			res.writeHead(r.code ?? 500);
 			res.end(r.output);
 			resolve();
 		}
