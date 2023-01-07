@@ -95,7 +95,7 @@ function parseMagic(res) {
 		e = e.replaceAll("END:VEVENT", ""); // Clean last vevent tag
 
 		// Split event by line, split every line by its field name and value and recombine in case some : are floating around after the field name marker
-		e = e.split("\n").map(line => {let j = line.split(":"); return [j[0], j.slice(1).join("")]});
+		e = e.split("\n").map(line => {let j = line.split(":"); return [j[0], j.slice(1).join(":")]});
 
 		let i = 0;
 
@@ -148,10 +148,12 @@ function parseMagic(res) {
 }
 
 function modifyEvents(events) {
+	console.log(events);
 	return events.map(event => {
 		let id = event.SUMMARY.split("#")[1] ?? 0
 		let profName = event.DESCRIPTION.split("\\n")[5];
-		event.SUMMARY = formatCourseName(event.SUMMARY.split("-")[2]) + (profName !== "" ? (" - " + profName) : "");
+		let courseType = event.SUMMARY.split(":")[1];
+		event.SUMMARY = (courseType !== "" ? ("[" + courseType + "] ") : "") + formatCourseName(event.SUMMARY.split("-")[2]) + (profName !== "" ? (" - " + profName) : "");
 		event.LOCATION = event.LOCATION.split(" - ")[1] ?? "";
 
 		event.DESCRIPTION = event.DESCRIPTION.split("\\n").map((j, i) => (i==1) ? (j + " #" + id.toString()) : j).join("\\n")
