@@ -84,13 +84,18 @@ function parseMagic(res) {
 	output += splt[0]; // padding
 
 	// parse 
-	splt = splt.map(e => e.replaceAll("END:VEVENT", "")).slice(1); // cleanup
-	splt = splt.map(e => e.split("\n").map(line => line.split(":"))); // split by fields and split key/val in fields
+	// splt = splt.map(e => e.replaceAll("END:VEVENT", "")).slice(1); // cleanup
+	// splt = splt.map(e => e.split("\n").map(line => line.split(":"))); // split by fields and split key/val in fields
 
-	splt = splt.map(e => e.map(l => [l[0], l.slice(1).join("")])); // join back values containings : that have been splitted
+	// splt = splt.map(e => e.map(l => [l[0], l.slice(1).join("")])); // join back values containings : that have been splitted
 
 	// SLOW AS FUCK BUT WORKS LOL
-	splt = splt.map(e => {
+	splt = splt.slice(1).map(e => {
+		e = e.replaceAll("END:VEVENT", ""); // Clean last vevent tag
+
+		// Split event by line, split every line by its field name and value and recombine in case some : are floating around after the field name marker
+		e = e.split("\n").map(line => {let j = line.split(":"); return [j[0], j.slice(1).join("")]});
+
 		let i = 0;
 
 		let n_e = [];
@@ -123,7 +128,7 @@ function parseMagic(res) {
 	
 	splt = splt.map(e => Object.fromEntries(e.filter(j => j[0] != '' && j[0] != ' n')));
 
-	console.log(splt);
+	// console.log(splt);
 	
 	splt = modifyEvents(splt);
 
