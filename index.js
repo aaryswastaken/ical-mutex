@@ -25,7 +25,17 @@ server.on("request", async (req, res) => {
 			res.end(r.output);
 			resolve();
 		}
-	
+		
+		if (req.url.match(/\/isup\?token/gm)) {
+			res.writeHead(200);
+			res.end("Ok");
+			resolve();
+
+			console.log("isup");
+
+			return;
+		}
+
 		handleReq(url)
 			.then(response => {
 				if (response.error) {
