@@ -10,7 +10,9 @@ const server = http.createServer();
 server.on("request", async (req, res) => {
 	return new Promise((resolve, reject) => {
 	    // console.log(req.url.replaceAll(/.*\?/g, ""));
-	    let url = req.url.replaceAll(/.*\?/g, "");
+	    // let url = req.url.replaceAll(/.*\?/g, "");
+		let url = req.url.replaceAll(/\/\?http/g, "http");
+		console.log(url)
 		
 		function handleSuccess(r) {
 			res.setHeader("Content-disposition", "inline; filename=ADECal.ics");
@@ -53,12 +55,12 @@ function handleReq(url) {
     return new Promise((resolve, reject) => {
 	url = decodeURI(url);
 	console.log("Going for url: "+url);
-        if (url.match(/https:\/\/ade-outils\.insa-lyon\.fr\/ADE-Cal/gm)) {
+        if (url.match(/https:\/\/ade-outils\.insa-lyon\.fr\/ADE-Cal/gm) || url.match(/https:\/\/ade2-web\.insa-lyon\.fr\/jsp\/custom/g)) {
             axios.get(url)
 				.then(response => {
 					console.log("Response code from ADE: "+response.status); // console.log("Status code: "+res.statusCode.toString());
 					if (response.status == 200) {
-	                    let r = parseMagic(response.data);
+	                    			let r = parseMagic(response.data);
 		
 						if (r.error) {
 							reject(r);
@@ -152,21 +154,33 @@ function parseMagic(res) {
 
 	output += "END:VCALENDAR";
 
+	console.log(output)
     // return { output: "Error: not implemented yet", error: true, code: 501 };
 	
 	return { output: output, error: false }
 }
 
 function modifyEvents(events) {
-	console.log(events);
 	return events.map(event => {
 		let id = event.SUMMARY.split("#")[1] ?? 0
 		let profName = event.DESCRIPTION.split("\\n")[5];
-		let courseType = event.SUMMARY.split(":")[1];
-		event.SUMMARY = (courseType !== "" ? ("[" + courseType + "] ") : "") + formatCourseName(event.SUMMARY.split("-")[2]) + (profName !== "" ? (" - " + profName) : "");
+		let courseType = (event.SUMMARY.split("::")[1] ?? "").split(":")[1] ?? "";
+		
+		let pre_event = Object.fromEntries(Object.entries(event)) // for debug purpose
+		// let courseType = 
+
+		// [LV:EDT] undefined -  
+		event.SUMMARY = (courseType !== "" ? ("[" + courseType + "] ") : "") + formatCourseName((event.DESCRIPTION.split("] ")[1] ?? "").split("\\n")[0]) + (profName !== "" ? (" - " + profName) : "");
 		event.LOCATION = event.LOCATION.split(" - ")[1] ?? "";
 
-		event.DESCRIPTION = event.DESCRIPTION.split("\\n").map((j, i) => (i==1) ? (j + " #" + id.toString()) : j).join("\\n")
+		event.DESCRIPTION = event.DESCRIPTION.split("\\n").map((j, i) => (i==1) ? (j + " #" + id.toString()) : j).join("\\n") + "\\n\\n\\n --- \\n" + (event.DESCRIPTION.split("] ")[1] ?? "").split("\\n")[0]
+		
+		if (true){
+			console.log("-----")
+			console.log(pre_event)
+			console.log({id, profName, courseType})
+			console.log(event)
+		}
 
 		return event;
 	});
