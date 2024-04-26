@@ -105,6 +105,7 @@ function parseMagic(res) {
 	// SLOW AS FUCK BUT WORKS LOL
 	splt = splt.slice(1).map(e => {
 		e = e.replaceAll("END:VEVENT", ""); // Clean last vevent tag
+		e = e.replaceAll("END:VCALENDAR", "");
 
 		// Split event by line, split every line by its field name and value and recombine in case some : are floating around after the field name marker
 		e = e.split("\n").map(line => {let j = line.split(":"); return [j[0], j.slice(1).join(":")]});
