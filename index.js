@@ -154,7 +154,7 @@ function parseMagic(res) {
 
 	output += "END:VCALENDAR";
 
-	console.log(output)
+	// console.log(output)
     // return { output: "Error: not implemented yet", error: true, code: 501 };
 	
 	return { output: output, error: false }
@@ -175,7 +175,7 @@ function modifyEvents(events) {
 
 		event.DESCRIPTION = event.DESCRIPTION.split("\\n").map((j, i) => (i==1) ? (j + " #" + id.toString()) : j).join("\\n") + "\\n\\n\\n --- \\n" + (event.DESCRIPTION.split("] ")[1] ?? "").split("\\n")[0]
 		
-		if (true){
+		if (false){
 			console.log("-----")
 			console.log(pre_event)
 			console.log({id, profName, courseType})
